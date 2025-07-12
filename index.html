@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>found. coin (found) - Solana ICO</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    color: white;
+    background: url('An_oil_painting_on_canvas_in_the_Renaissance_style.png') no-repeat top center;
+    background-size: cover;
+  }
+  .overlay {
+    background-color: rgba(0, 0, 0, 0.65);
+    min-height: 100%;
+    padding: 2rem;
+  }
+  .center {
+    text-align: center;
+    margin-top: 2rem;
+  }
+  .logo {
+    max-width: 33%;
+    width: 33%;
+    margin-bottom: 1rem;
+  }
+  h1 {
+    font-size: 2.5rem;
+  }
+  .btn {
+    background-color: #9a4dff;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 1rem;
+    border-radius: 6px;
+  }
+  .tokenomics, .converter {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin: 2rem auto;
+    max-width: 500px;
+  }
+  input[type="number"] {
+    padding: 0.5rem;
+    width: 100%;
+    margin-top: 1rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+  }
+  .wallet-info {
+    margin-top: 1rem;
+  }
+  .links {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+  }
+  .links a {
+    color: #9a4dff;
+    text-decoration: none;
+    margin: 0 10px;
+  }
+  .links a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+</head>
+<body>
+  <div class="overlay">
+    <div class="center">
+      <img src="logo.png" alt="found. logo" class="logo"/>
+      <h1>fungi-powered decentralized currency of the underground</h1>
+      <button class="btn" onclick="connectWallet()">connect wallet</button>
+      <div class="wallet-info" id="wallet-address"></div>
+    </div>
+
+    <div class="converter">
+      <h2>Buy found.</h2>
+      <p>Price: <strong>$0.0005 USD</strong> per found</p>
+      <label for="solAmount">Enter amount in SOL:</label>
+      <input type="number" id="solAmount" placeholder="0.1" step="0.01" oninput="calculateTokens()" />
+      <p id="tokenAmount">You will receive: 0 found</p>
+      <p id="usdAmount">(≈ $0.00 USD)</p>
+      <button class="btn" onclick="buyFound()">Buy found</button>
+    </div>
+
+    <div class="tokenomics">
+      <h2>Tokenomics</h2>
+      <ul>
+        <li>🍄 80% Presale</li>
+        <li>💧 10% Liquidity</li>
+        <li>🛠️ 10% Dev</li>
+      </ul>
+    </div>
+
+    <div class="links">
+      <p>
+        🔗 <a href="https://phantom.app/download" target="_blank">Download Phantom Wallet</a> | 
+        📊 <a href="https://solscan.io/token/9ZNW1JoVvx1HPQ2WzK5Hg24U946Jmo5XFeDwkohFfJ11" target="_blank">View Token on Solscan</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+  let wallet = null;
+
+  async function connectWallet() {
+    if ("solana" in window) {
+      try {
+        const resp = await window.solana.connect();
+        wallet = resp.publicKey;
+        document.getElementById("wallet-address").innerText = `✅ Connected: ${wallet.toString()}`;
+      } catch (err) {
+        alert("❌ Wallet connection failed.");
+        console.error(err);
+      }
+    } else {
+      alert("Phantom wallet not found.");
+    }
+  }
+
+  async function getSolPrice() {
+    try {
+      const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+      const data = await res.json();
+      return data.solana.usd;
+    } catch (err) {
+      console.error("Failed to fetch SOL price", err);
+      return 0;
+    }
+  }
+
+  async function calculateTokens() {
+    const solAmount = parseFloat(document.getElementById("solAmount").value);
+    const solToUsd = await getSolPrice();
+    const tokenPriceUsd = 0.0005;
+
+    if (!solAmount || solAmount <= 0) {
+      document.getElementById("tokenAmount").innerText = `You will receive: 0 found`;
+      document.getElementById("usdAmount").innerText = `(≈ $0.00 USD)`;
+      return;
+    }
+
+    const usdAmount = solAmount * solToUsd;
+    const tokens = Math.floor(usdAmount / tokenPriceUsd);
+
+    document.getElementById("tokenAmount").innerText = `You will receive: ${tokens.toLocaleString()} found`;
+    document.getElementById("usdAmount").innerText = `(≈ $${usdAmount.toFixed(2)} USD)`;
+  }
+
+  async function buyFound() {
+    if (!wallet) {
+      alert("Connect your wallet first.");
+      return;
+    }
+
+    const solAmount = parseFloat(document.getElementById("solAmount").value);
+    if (!solAmount || solAmount <= 0) {
+      alert("Enter a valid SOL amount.");
+      return;
+    }
+
+    const receiver = "2w1VWebFcwFJ2qiD5vRxAqHv3qbcCzftSEhq4BU6XuWM"; // your program address
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
+    const transaction = new solanaWeb3.Transaction().add(
+      solanaWeb3.SystemProgram.transfer({
+        fromPubkey: wallet,
+        toPubkey: new solanaWeb3.PublicKey(receiver),
+        lamports: solanaWeb3.LAMPORTS_PER_SOL * solAmount,
+      })
+    );
+
+    try {
+      const { signature } = await window.solana.signAndSendTransaction(transaction);
+      alert(`✅ Transaction sent:\n${signature}`);
+    } catch (err) {
+      console.error("❌ Transaction failed:", err);
+      alert("❌ Transaction failed");
+    }
+  }
+</script>
+
+<script src="https://unpkg.com/@solana/web3.js@1.75.0/lib/index.iife.min.js"></script>
+<script>
+  const solanaWeb3 = window.solanaWeb3 || solanaWeb3;
+
+  let wallet = null;
+
+  async function connectWallet() {
+    if ("solana" in window) {
+      try {
+        const resp = await window.solana.connect();
+        wallet = resp.publicKey;
+        document.getElementById("wallet-address").innerText = `✅ Connected: ${wallet.toString()}`;
+      } catch (err) {
+        alert("❌ Wallet connection failed.");
+        console.error(err);
+      }
+    } else {
+      alert("Phantom wallet not found.");
+    }
+  }
+
+  async function getSolPrice() {
+    try {
+      const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+      const data = await res.json();
+      return data.solana.usd;
+    } catch (err) {
+      console.error("Failed to fetch SOL price", err);
+      return 0;
+    }
+  }
+
+  async function calculateTokens() {
+    const solAmount = parseFloat(document.getElementById("solAmount").value);
+    const solToUsd = await getSolPrice();
+    const tokenPriceUsd = 0.0005;
+
+    if (!solAmount || solAmount <= 0) {
+      document.getElementById("tokenAmount").innerText = `You will receive: 0 found`;
+      document.getElementById("usdAmount").innerText = `(≈ $0.00 USD)`;
+      return;
+    }
+
+    const usdAmount = solAmount * solToUsd;
+    const tokens = Math.floor(usdAmount / tokenPriceUsd);
+
+    document.getElementById("tokenAmount").innerText = `You will receive: ${tokens.toLocaleString()} found`;
+    document.getElementById("usdAmount").innerText = `(≈ $${usdAmount.toFixed(2)} USD)`;
+  }
+
+  async function buyFound() {
+    if (!wallet) {
+      alert("Connect your wallet first.");
+      return;
+    }
+
+    const solAmount = parseFloat(document.getElementById("solAmount").value);
+    if (!solAmount || solAmount <= 0) {
+      alert("Enter a valid SOL amount.");
+      return;
+    }
+
+    const receiver = new solanaWeb3.PublicKey("DVZhueJHe6r1rSpouUWibRJL7gdLJiMpXgtxG8DYCjmo");
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"), "confirmed");
+
+    const transaction = new solanaWeb3.Transaction().add(
+      solanaWeb3.SystemProgram.transfer({
+        fromPubkey: window.solana.publicKey,
+        toPubkey: receiver,
+        lamports: solanaWeb3.LAMPORTS_PER_SOL * solAmount,
+      })
+    );
+
+    try {
+      const { signature } = await window.solana.signAndSendTransaction(transaction);
+      alert(`✅ Transaction sent:\nhttps://solscan.io/tx/${signature}`);
+    } catch (err) {
+      console.error("❌ Transaction failed:", err);
+      alert("❌ Transaction failed");
+    }
+  }
+</script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
