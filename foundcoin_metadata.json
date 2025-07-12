@@ -1,0 +1,26 @@
+{
+  "name": "found. coin",
+  "symbol": "found",
+  "description": "The fungi-themed meme coin.",
+  "image": "https://github.com/KGROENKE1111/foundcoin.site/blob/main/spore-print.png",
+  "decimals": 9,
+  "seller_fee_basis_points": 0,
+  "external_url": "https://foundcoin.site",
+  "attributes": [],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://github.com/KGROENKE1111/foundcoin.site/blob/main/spore-print.png",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "2BSXseHpuX69DExZTRG4JTDcKYCwZbLJv98TZb4jcmkq",
+        "share": 100
+      }
+    ]
+  }
+}
+
